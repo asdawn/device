@@ -42,9 +42,6 @@ type OnChangeFunction func(*DeviceSet, *Device) error
 /**
 设置对象取值
 device: 对象取值
-onSetChange: deviceSet修改的回调函数，直接在新的go routine中执行，不占用当前线程
-onDeviceMove: 对象变化的回调函数
-thresholds: 判断是否变化的依据
 返回（是否是新建对象，是否发生错误）
 */
 func (deviceSet *DeviceSet) SetDevice(device *Device) (bool, error) {
@@ -63,6 +60,30 @@ func (deviceSet *DeviceSet) SetDevice(device *Device) (bool, error) {
 	}
 
 	return !exists, err
+}
+
+/**
+删除超时的对象
+
+timeout
+返回（删除个数，是否发生错误）
+*/
+func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int64) (int, error) {
+	deviceSet.RWLock.Lock()
+	defer deviceSet.RWLock.Unlock()
+	var toDelete = make([]string, 0, 10)
+	var err error = nil
+	for _, device := range deviceSet.Devices {
+		t := (*device).T
+		id := (*device).ID
+		if (currentTime - t) > timeout {
+			toDelete = append(toDelete, id)
+		}
+	}
+	for _, id := range toDelete {
+		delete(deviceSet.Devices, id)
+	}
+	return len(toDelete), err
 }
 
 /**
