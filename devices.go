@@ -66,13 +66,13 @@ func (deviceSet *DeviceSet) SetDevice(device *Device) (bool, error) {
 删除超时的对象
 
 timeout
-返回（删除个数，是否发生错误）
+返回（删除个数，删除清单）
 */
-func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int64) (int, error) {
+func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int64) (int, []string) {
 	deviceSet.RWLock.Lock()
 	defer deviceSet.RWLock.Unlock()
 	var toDelete = make([]string, 0, 10)
-	var err error = nil
+
 	for _, device := range deviceSet.Devices {
 		t := (*device).T
 		id := (*device).ID
@@ -83,7 +83,7 @@ func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int6
 	for _, id := range toDelete {
 		delete(deviceSet.Devices, id)
 	}
-	return len(toDelete), err
+	return len(toDelete), toDelete
 }
 
 /**
