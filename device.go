@@ -11,6 +11,18 @@ import (
 )
 
 /*
+存储的设备信息，不考虑渲染问题，T采用东八区字符串格式
+*/
+type Device1 struct {
+	ID     string  `json:"id"`
+	X      float32 `json:"x"`
+	Y      float32 `json:"y"`
+	R      float32 `json:"r"`
+	Status int     `json:"s"`
+	T      string  `json:"t"`
+}
+
+/*
 后台存储的设备信息，不考虑渲染问题
 */
 type Device struct {
