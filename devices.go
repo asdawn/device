@@ -1,6 +1,7 @@
 /**
 设备集，仅用于后台数据状态缓存和差分处理，不考虑消息格式问题
 
+
 ver 1.0
 */
 package device
@@ -18,8 +19,8 @@ type DeviceSet struct {
 	Devices     map[string]*Device //ID->设备
 	//Interval    int64                    //消息时间间隔
 	LastModifyTime int64 //上一次消息的时间
-	//OnTime      func(*DeviceSet)         //定时函数，
-	//OnChange    func(*DeviceSet)
+	//OnTime      func(*DeviceSet, []*Device)         //定时函数，
+	//OnChange func(*DeviceSet, []*Device)
 	RWLock sync.RWMutex
 }
 
