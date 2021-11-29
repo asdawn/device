@@ -62,6 +62,22 @@ func (device *Device) GetDelta(device0 *Device) (float64, float32, int64, error)
 }
 
 /**
+根据坐标变化计算两个对象之间的夹角
+*/
+func (device *Device) GetAngle(device0 *Device) (float32, error) {
+	if device == nil || device0 == nil {
+		return 0, errors.New("null pointer")
+	}
+	deltaX := device.X - device0.X
+	deltaY := device.Y - device0.Y
+	if deltaX == 0 && deltaY == 0 {
+		return 0, errors.New("not moved")
+	}
+	r := float32(math.Atan2(float64(deltaY), float64(deltaX)))
+	return r, nil
+}
+
+/**
 获取对象的JSON
 */
 func (device *Device) JSON() ([]byte, error) {
