@@ -217,16 +217,16 @@ func (deviceSet *DeviceSet) Save(file string) error {
 /**
 保存当前状态到文件
 */
-func (*DeviceSet) Load(file string) (*DeviceSet, error) {
+func (deviceSet *DeviceSet) Load(file string) (*DeviceSet, error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	deviceSet := &DeviceSet{}
-	err = json.Unmarshal(data, deviceSet)
+	dSet := &DeviceSet{}
+	err = json.Unmarshal(data, dSet)
 	if err != nil {
 		return nil, err
 	} else {
-		return deviceSet, nil
+		return dSet, nil
 	}
 }
