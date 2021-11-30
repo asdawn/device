@@ -7,7 +7,9 @@ ver 1.0
 package device
 
 import (
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"sync"
 )
 
@@ -196,4 +198,35 @@ func (deviceSet *DeviceSet) Clear() {
 	deviceSet.RWLock.Lock()
 	defer deviceSet.RWLock.Unlock()
 	deviceSet.Devices = make(map[string]*Device)
+}
+
+/**
+保存当前状态到文件
+*/
+func (deviceSet *DeviceSet) Save(file string) error {
+	deviceSet.RWLock.Lock()
+	data, err := json.Marshal(deviceSet)
+	deviceSet.RWLock.Unlock()
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(file, data, 0777)
+	return err
+}
+
+/**
+保存当前状态到文件
+*/
+func (*DeviceSet) Load(file string) (*DeviceSet, error) {
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+	deviceSet := &DeviceSet{}
+	err = json.Unmarshal(data, deviceSet)
+	if err != nil {
+		return nil, err
+	} else {
+		return deviceSet, nil
+	}
 }
