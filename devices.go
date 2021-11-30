@@ -217,7 +217,7 @@ func (deviceSet *DeviceSet) Save(file string) error {
 /**
 保存当前状态到文件
 */
-func (deviceSet *DeviceSet) Load(file string) (*DeviceSet, error) {
+func Load(file string) (*DeviceSet, error) {
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
