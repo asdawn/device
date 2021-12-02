@@ -36,6 +36,16 @@ type DeviceList struct {
 }
 
 /**
+新建一个DeviceList对象
+*/
+func NewDeviceList(deviceClass string) *DeviceList {
+	return &DeviceList{
+		DeviceClass: deviceClass,
+		Devices:     make(map[string]int64),
+	}
+}
+
+/**
 新建一个DeviceSet对象，Now和Last相同
 */
 func NewDeviceSet(DeviceClass string) *DeviceSet {
