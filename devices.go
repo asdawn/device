@@ -27,6 +27,15 @@ type DeviceSet struct {
 }
 
 /**
+设备清单
+*/
+type DeviceList struct {
+	DeviceClass string           //设备类
+	Devices     map[string]int64 //ID->时间戳
+	RWLock      sync.RWMutex
+}
+
+/**
 新建一个DeviceSet对象，Now和Last相同
 */
 func NewDeviceSet(DeviceClass string) *DeviceSet {
@@ -41,6 +50,27 @@ func NewDeviceSet(DeviceClass string) *DeviceSet {
 发生修改时的回调函数
 */
 type OnChangeFunction func(*DeviceSet, *Device) error
+
+/**
+设置对象取值
+device: 对象取值
+返回 列表（可能对象为空）
+*/
+func (deviceSet *DeviceSet) List() *DeviceList {
+	deviceSet.RWLock.Lock()
+	defer deviceSet.RWLock.Unlock()
+	list := &DeviceList{
+		DeviceClass: deviceSet.DeviceClass,
+		Devices:     make(map[string]int64),
+	}
+	if deviceSet.Devices != nil && len(deviceSet.Devices) > 0 {
+		for id, device := range deviceSet.Devices {
+			t := device.T
+			(*list).Devices[id] = t
+		}
+	}
+	return list
+}
 
 /**
 设置对象取值
