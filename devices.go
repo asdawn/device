@@ -63,6 +63,22 @@ func NewDeviceSet(DeviceClass string) *DeviceSet {
 type OnChangeFunction func(*DeviceSet, *Device) error
 
 /**
+获取设备ID列表
+返回 ID数组
+*/
+func (deviceSet *DeviceSet) GetIDs() []string {
+	deviceSet.RWLock.Lock()
+	defer deviceSet.RWLock.Unlock()
+	ids := make([]string, 0)
+	if deviceSet.Devices != nil && len(deviceSet.Devices) > 0 {
+		for id, _ := range deviceSet.Devices {
+			ids = append(ids, id)
+		}
+	}
+	return ids
+}
+
+/**
 设置对象取值
 device: 对象取值
 返回 列表（可能对象为空）
