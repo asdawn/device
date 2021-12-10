@@ -150,11 +150,11 @@ func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int6
 设置超时对象样式
 currentTime 当前时间
 timeout 超时时间
-status 设定状态值
+color 色彩值
 返回：修改个数
 
 */
-func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, status int) (int, []string) {
+func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, color int) (int, []string) {
 	deviceSet.RWLock.Lock()
 	defer deviceSet.RWLock.Unlock()
 	var toModify = make([]string, 0, 10)
@@ -162,7 +162,7 @@ func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, 
 		t := (*device).T
 		id := (*device).ID
 		if (currentTime - t) > timeout {
-			(*device).Status = status
+			(*device).Color = color
 			toModify = append(toModify, id)
 		}
 	}
