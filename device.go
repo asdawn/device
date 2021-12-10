@@ -19,7 +19,7 @@ type Device1 struct {
 	Y      float32 `json:"y"`
 	R      float32 `json:"r"`
 	Status int     `json:"s"`
-	Color  int     `c`
+	Color  int     `json:"c"`
 	T      string  `json:"t"`
 }
 
@@ -32,7 +32,7 @@ type Device struct {
 	Y      float32 `json:"y"`
 	R      float32 `json:"r"`
 	Status int     `json:"s"`
-	Color  int     `c`
+	Color  int     `json:"c"`
 	T      int64   `json:"t"`
 }
 
