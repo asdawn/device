@@ -187,7 +187,6 @@ func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int6
 	defer deviceSet.RWLock.Unlock()
 	var toModify = make([]string, 0, 10)
 
-nextdevice:
 	for _, device := range deviceSet.Devices {
 		t := (*device).T
 		id := (*device).ID
@@ -199,7 +198,7 @@ nextdevice:
 					(*device).Color = color[i]
 					toModify = append(toModify, id+"-->"+strconv.Itoa(color[i]))
 				}
-				continue nextdevice
+				break
 			}
 		}
 	}
