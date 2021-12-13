@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -162,8 +163,42 @@ func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, 
 		t := (*device).T
 		id := (*device).ID
 		if (currentTime - t) > timeout {
-			(*device).Color = color
+			(*device).Color = status
 			toModify = append(toModify, id)
+		}
+	}
+	return len(toModify), toModify
+}
+
+/**
+设置超时对象样式 1，2，3档次
+currentTime 当前时间
+timeout 超时时间，要求降序排列
+color 色彩值
+返回：修改个数
+
+*/
+func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int) (int, []string) {
+	if len(timeout) != len(color) {
+		return 0, nil
+	}
+	var n = len(timeout)
+	deviceSet.RWLock.Lock()
+	defer deviceSet.RWLock.Unlock()
+	var toModify = make([]string, 0, 10)
+
+nextdevice:
+	for _, device := range deviceSet.Devices {
+		t := (*device).T
+		id := (*device).ID
+		var i = 0
+		for i = 0; i < n; i++ {
+			//超时降序排列，超时多先判断，只记录真正修改的
+			if (currentTime-t) >= timeout[i] && (*device).Color != color[i] {
+				(*device).Color = color[i]
+				toModify = append(toModify, id+"-->"+strconv.Itoa(color[i]))
+				continue nextdevice
+			}
 		}
 	}
 	return len(toModify), toModify
