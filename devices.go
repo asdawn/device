@@ -194,9 +194,11 @@ nextdevice:
 		var i = 0
 		for i = 0; i < n; i++ {
 			//超时降序排列，超时多先判断，只记录真正修改的
-			if (currentTime-t) >= timeout[i] && (*device).Color != color[i] {
-				(*device).Color = color[i]
-				toModify = append(toModify, id+"-->"+strconv.Itoa(color[i]))
+			if (currentTime - t) >= timeout[i] {
+				if (*device).Color != color[i] {
+					(*device).Color = color[i]
+					toModify = append(toModify, id+"-->"+strconv.Itoa(color[i]))
+				}
 				continue nextdevice
 			}
 		}
