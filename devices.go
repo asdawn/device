@@ -175,16 +175,17 @@ func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, 
 currentTime 当前时间
 timeout 超时时间，要求降序排列
 color 色彩值
-返回：修改个数
+返回：（修改个数，修改后的对象，修改详情）
 
 */
-func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int) (int, []string) {
-	if len(timeout) != len(color) {
-		return 0, nil
-	}
-	var n = len(timeout)
+func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int) (int, []*Device, []string) {
 	deviceSet.RWLock.Lock()
 	defer deviceSet.RWLock.Unlock()
+	toSet := make([]*Device, 0)
+	if len(timeout) != len(color) {
+		return 0, nil, nil
+	}
+	var n = len(timeout)
 	var toModify = make([]string, 0, 10)
 
 	for _, device := range deviceSet.Devices {
@@ -196,13 +197,17 @@ func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int6
 			if (currentTime - t) >= timeout[i] {
 				if (*device).Color != color[i] {
 					(*device).Color = color[i]
+					toSet = append(toSet, device)
 					toModify = append(toModify, id+"-->"+strconv.Itoa(color[i]))
 				}
 				break
 			}
 		}
 	}
-	return len(toModify), toModify
+	if len(toSet) == 0 {
+		toSet = nil
+	}
+	return len(toModify), toSet, toModify
 }
 
 /**
