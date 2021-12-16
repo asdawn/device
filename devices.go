@@ -66,10 +66,13 @@ type OnChangeFunction func(*DeviceSet, *Device) error
 /**
 获取设备ID列表
 返回 ID数组
+lock 是否加锁
 */
-func (deviceSet *DeviceSet) GetIDs() []string {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) GetIDs(lock bool) []string {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	ids := make([]string, 0)
 	if deviceSet.Devices != nil && len(deviceSet.Devices) > 0 {
 		for id, _ := range deviceSet.Devices {
@@ -82,11 +85,14 @@ func (deviceSet *DeviceSet) GetIDs() []string {
 /**
 设置对象取值
 device: 对象取值
+lock 是否加锁
 返回 列表（可能对象为空）
 */
-func (deviceSet *DeviceSet) List() *DeviceList {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) List(lock bool) *DeviceList {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	list := &DeviceList{
 		DeviceClass: deviceSet.DeviceClass,
 		Devices:     make(map[string]int64),
@@ -103,14 +109,17 @@ func (deviceSet *DeviceSet) List() *DeviceList {
 /**
 设置对象取值
 device: 对象取值
+lock 是否加锁
 返回（是否是新建对象，是否发生错误）
 */
-func (deviceSet *DeviceSet) SetDevice(device *Device) (bool, error) {
+func (deviceSet *DeviceSet) SetDevice(device *Device, lock bool) (bool, error) {
 	if device == nil {
 		return false, errors.New("device should not be a null pinter")
 	}
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	var err error = nil
 	var id string = device.ID
 	_, exists := deviceSet.Devices[id]
@@ -125,13 +134,16 @@ func (deviceSet *DeviceSet) SetDevice(device *Device) (bool, error) {
 
 /**
 删除超时的对象
-
-timeout
+currentTime 当前时间
+timeout 超时时间
+lock 是否加锁
 返回（删除个数，删除清单）
 */
-func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int64) (int, []string) {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int64, lock bool) (int, []string) {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	var toDelete = make([]string, 0, 10)
 
 	for _, device := range deviceSet.Devices {
@@ -152,12 +164,15 @@ func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int6
 currentTime 当前时间
 timeout 超时时间
 status 色彩值
+lock 是否加锁
 返回：修改个数
 
 */
-func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, status int) (int, []string) {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, status int, lock bool) (int, []string) {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	var toModify = make([]string, 0, 10)
 	for _, device := range deviceSet.Devices {
 		t := (*device).T
@@ -175,12 +190,15 @@ func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, 
 currentTime 当前时间
 timeout 超时时间，要求降序排列
 color 色彩值
+lock 是否加锁
 返回：（修改个数，修改后的对象，修改详情）
 
 */
-func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int) (int, []*Device, []string) {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int, lock bool) (int, []*Device, []string) {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	toSet := make([]*Device, 0)
 	if len(timeout) != len(color) {
 		return 0, nil, nil
@@ -214,11 +232,14 @@ func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int6
 删除超时的对象
 
 timeout 超时时间
+lock 是否锁定对象
 返回 删除个数
 */
-func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64) int {
-	deviceList.RWLock.Lock()
-	defer deviceList.RWLock.Unlock()
+func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int {
+	if lock {
+		deviceList.RWLock.Lock()
+		defer deviceList.RWLock.Unlock()
+	}
 	var toDelete = make([]string, 0, 10)
 	now := time.Now().Unix()
 	for id, t := range deviceList.Devices {
@@ -235,19 +256,19 @@ func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64) int {
 /**
 设置对象取值
 devices: 对象取值
-onSetChange: deviceSet修改的回调函数，直接在新的go routine中执行，不占用当前线程
-onDeviceMove: 对象变化的回调函数
-thresholds: 判断是否变化的依据
+lock: 是否锁定对象
 返回（新建对象数，修改对象数，是否发生错误）
 */
-func (deviceSet *DeviceSet) SetDevices(devices []*Device) (int, int, error) {
+func (deviceSet *DeviceSet) SetDevices(devices []*Device, lock bool) (int, int, error) {
 	if len(devices) == 0 {
 		return 0, 0, nil
 	}
 	newCnt := 0
 	modifyCnt := 0
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+	if lock {
+		deviceSet.RWLock.Lock()
+		defer deviceSet.RWLock.Unlock()
+	}
 	var err error = nil
 	for _, device := range devices {
 		var id string = device.ID
@@ -269,14 +290,17 @@ func (deviceSet *DeviceSet) SetDevices(devices []*Device) (int, int, error) {
 /**
 删除对象
 device: 对象id
+lock: 是否锁定对象
 返回：（是否找到，是否出错）
 */
-func (deviceSet *DeviceSet) RemoveDevice(id string) (bool, error) {
+func (deviceSet *DeviceSet) RemoveDevice(id string, lock boolean) (bool, error) {
 	if len(id) == 0 {
 		return false, errors.New("len(id) should not be 0")
 	}
+	if lock{
 	deviceSet.RWLock.Lock()
 	defer deviceSet.RWLock.Unlock()
+}
 	var err error = nil
 	_, exists := deviceSet.Devices[id]
 	if exists {
@@ -289,11 +313,14 @@ func (deviceSet *DeviceSet) RemoveDevice(id string) (bool, error) {
 /**
 删除对象
 devices: 对象id清单
+lock: 是否锁定对象
 返回：（删除成功个数，是否出错）
 */
-func (deviceSet *DeviceSet) RemoveDevices(ids []string) (int, error) {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) RemoveDevices(ids []string, lock bool) (int, error) {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	n := 0
 	var err error = nil
 	for _, id := range ids {
@@ -308,10 +335,13 @@ func (deviceSet *DeviceSet) RemoveDevices(ids []string) (int, error) {
 
 /**
 获取指定ID的device数据
+lock: 是否锁定对象
 */
-func (deviceSet *DeviceSet) GetDevice(id string) *Device {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) GetDevice(id string lock bool) *Device {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	var device, ok = deviceSet.Devices[id]
 	if !ok {
 		return nil
@@ -322,10 +352,13 @@ func (deviceSet *DeviceSet) GetDevice(id string) *Device {
 
 /**
 获取当前的Device数组
+lock: 是否锁定对象
 */
-func (deviceSet *DeviceSet) GetDevices() []*Device {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) GetDevices( lock bool) []*Device {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	var devices []*Device
 	devices = make([]*Device, 0)
 	for _, device := range deviceSet.Devices {
@@ -336,20 +369,27 @@ func (deviceSet *DeviceSet) GetDevices() []*Device {
 
 /**
 清空当前的设备数组
+lock: 是否锁定对象
 */
-func (deviceSet *DeviceSet) Clear() {
-	deviceSet.RWLock.Lock()
-	defer deviceSet.RWLock.Unlock()
+func (deviceSet *DeviceSet) Clear(lock bool) {
+	if lock{
+		deviceSet.RWLock.Lock()
+		deviceSet.RWLock.Unlock()
+	}
 	deviceSet.Devices = make(map[string]*Device)
 }
 
 /**
 保存当前状态到文件
+lock: 是否锁定对象
 */
-func (deviceSet *DeviceSet) Save(file string) error {
+func (deviceSet *DeviceSet) Save(file string, lock bool) error {
+	if lock{
 	deviceSet.RWLock.Lock()
-	data, err := json.Marshal(deviceSet)
 	deviceSet.RWLock.Unlock()
+}
+	data, err := json.Marshal(deviceSet)
+	
 	if err != nil {
 		return err
 	}
@@ -358,7 +398,7 @@ func (deviceSet *DeviceSet) Save(file string) error {
 }
 
 /**
-保存当前状态到文件
+读取状态到文件
 */
 func Load(file string) (*DeviceSet, error) {
 	data, err := ioutil.ReadFile(file)
