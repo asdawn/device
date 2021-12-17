@@ -70,12 +70,12 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) GetIDs(lock bool) []string {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	ids := make([]string, 0)
-	if deviceSet.Devices != nil && len(deviceSet.Devices) > 0 {
-		for id, _ := range deviceSet.Devices {
+	if (*deviceSet).Devices != nil && len((*deviceSet).Devices) > 0 {
+		for id, _ := range (*deviceSet).Devices {
 			ids = append(ids, id)
 		}
 	}
@@ -90,16 +90,16 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) List(lock bool) *DeviceList {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	list := &DeviceList{
 		DeviceClass: deviceSet.DeviceClass,
 		Devices:     make(map[string]int64),
 	}
-	if deviceSet.Devices != nil && len(deviceSet.Devices) > 0 {
-		for id, device := range deviceSet.Devices {
-			t := device.T
+	if (*deviceSet).Devices != nil && len((*deviceSet).Devices) > 0 {
+		for id, device := range (*deviceSet).Devices {
+			t := (*device).T
 			(*list).Devices[id] = t
 		}
 	}
@@ -117,16 +117,16 @@ func (deviceSet *DeviceSet) SetDevice(device *Device, lock bool) (bool, error) {
 		return false, errors.New("device should not be a null pinter")
 	}
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	var err error = nil
-	var id string = device.ID
-	_, exists := deviceSet.Devices[id]
-	deviceSet.Devices[id] = device
+	var id string = (*device).ID
+	_, exists := (*deviceSet).Devices[id]
+	(*deviceSet).Devices[id] = device
 	//更新集合修改时间
-	if device.T > deviceSet.LastModifyTime {
-		deviceSet.LastModifyTime = device.T
+	if (*device).T > (*deviceSet).LastModifyTime {
+		(*deviceSet).LastModifyTime = (*device).T
 	}
 
 	return !exists, err
@@ -141,12 +141,12 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int64, lock bool) (int, []string) {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	var toDelete = make([]string, 0, 10)
 
-	for _, device := range deviceSet.Devices {
+	for _, device := range (*deviceSet).Devices {
 		t := (*device).T
 		id := (*device).ID
 		if (currentTime - t) > timeout {
@@ -154,7 +154,7 @@ func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int6
 		}
 	}
 	for _, id := range toDelete {
-		delete(deviceSet.Devices, id)
+		delete((*deviceSet).Devices, id)
 	}
 	return len(toDelete), toDelete
 }
@@ -170,11 +170,11 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, status int, lock bool) (int, []string) {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	var toModify = make([]string, 0, 10)
-	for _, device := range deviceSet.Devices {
+	for _, device := range (*deviceSet).Devices {
 		t := (*device).T
 		id := (*device).ID
 		if (currentTime - t) > timeout {
@@ -196,8 +196,8 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int, lock bool) (int, []*Device, []string) {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	toSet := make([]*Device, 0)
 	if len(timeout) != len(color) {
@@ -206,7 +206,7 @@ func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int6
 	var n = len(timeout)
 	var toModify = make([]string, 0, 10)
 
-	for _, device := range deviceSet.Devices {
+	for _, device := range (*deviceSet).Devices {
 		t := (*device).T
 		id := (*device).ID
 		var i = 0
@@ -237,18 +237,18 @@ lock 是否锁定对象
 */
 func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int {
 	if lock {
-		deviceList.RWLock.Lock()
-		defer deviceList.RWLock.Unlock()
+		(*deviceList).RWLock.Lock()
+		defer (*deviceList).RWLock.Unlock()
 	}
 	var toDelete = make([]string, 0, 10)
 	now := time.Now().Unix()
-	for id, t := range deviceList.Devices {
+	for id, t := range (*deviceList).Devices {
 		if now-t > timeout {
 			toDelete = append(toDelete, id)
 		}
 	}
 	for _, id := range toDelete {
-		delete(deviceList.Devices, id)
+		delete((*deviceList).Devices, id)
 	}
 	return len(toDelete)
 }
@@ -266,22 +266,22 @@ func (deviceSet *DeviceSet) SetDevices(devices []*Device, lock bool) (int, int, 
 	newCnt := 0
 	modifyCnt := 0
 	if lock {
-		deviceSet.RWLock.Lock()
-		defer deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	var err error = nil
 	for _, device := range devices {
-		var id string = device.ID
-		_, exists := deviceSet.Devices[id]
+		var id string = (*device).ID
+		_, exists := (*deviceSet).Devices[id]
 		if exists {
 			modifyCnt++
 		} else {
 			newCnt++
 		}
-		deviceSet.Devices[id] = device
+		(*deviceSet).Devices[id] = device
 		//更新集合修改时间
-		if device.T > deviceSet.LastModifyTime {
-			deviceSet.LastModifyTime = device.T
+		if (*device).T > (*deviceSet).LastModifyTime {
+			(*deviceSet).LastModifyTime = (*device).T
 		}
 	}
 	return newCnt, modifyCnt, err
@@ -298,13 +298,13 @@ func (deviceSet *DeviceSet) RemoveDevice(id string, lock bool) (bool, error) {
 		return false, errors.New("len(id) should not be 0")
 	}
 	if lock {
-		deviceSet.RWLock.Lock()
-		defer deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	var err error = nil
-	_, exists := deviceSet.Devices[id]
+	_, exists := (*deviceSet).Devices[id]
 	if exists {
-		delete(deviceSet.Devices, id)
+		delete((*deviceSet).Devices, id)
 	}
 
 	return !exists, err
@@ -318,15 +318,15 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) RemoveDevices(ids []string, lock bool) (int, error) {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	n := 0
 	var err error = nil
 	for _, id := range ids {
-		_, exists := deviceSet.Devices[id]
+		_, exists := (*deviceSet).Devices[id]
 		if exists {
-			delete(deviceSet.Devices, id)
+			delete((*deviceSet).Devices, id)
 			n++
 		}
 	}
@@ -339,10 +339,10 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) GetDevice(id string, lock bool) *Device {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
-	var device, ok = deviceSet.Devices[id]
+	var device, ok = (*deviceSet).Devices[id]
 	if !ok {
 		return nil
 	} else {
@@ -356,12 +356,12 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) GetDevices(lock bool) []*Device {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
 	var devices []*Device
 	devices = make([]*Device, 0)
-	for _, device := range deviceSet.Devices {
+	for _, device := range (*deviceSet).Devices {
 		devices = append(devices, device)
 	}
 	return devices
@@ -373,10 +373,10 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) Clear(lock bool) {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
 	}
-	deviceSet.Devices = make(map[string]*Device)
+	(*deviceSet).Devices = make(map[string]*Device)
 }
 
 /**
@@ -385,10 +385,12 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) Save(file string, lock bool) error {
 	if lock {
-		deviceSet.RWLock.Lock()
-		deviceSet.RWLock.Unlock()
+		(*deviceSet).RWLock.Lock()
 	}
-	data, err := json.Marshal(deviceSet)
+	data, err := json.Marshal(*deviceSet)
+	if lock { //尽快释放
+		(*deviceSet).RWLock.Unlock()
+	}
 
 	if err != nil {
 		return err
