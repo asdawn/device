@@ -1,5 +1,6 @@
 /*
 设备信息
+ver 1.1 增加额外时间戳、原始坐标
 ver 1.0
 */
 package device
@@ -15,12 +16,20 @@ import (
 */
 type Device1 struct {
 	ID     string  `json:"id"`
+	ORGX   float32 `json:"orgx"`
+	OGRY   float32 `json:"orgx"`
 	X      float32 `json:"x"`
 	Y      float32 `json:"y"`
 	R      float32 `json:"r"`
 	Status int     `json:"s"`
 	Color  int     `json:"c"`
-	T      string  `json:"t"`
+	T      string  `json:"t"`  //设备消息产生时间
+	TM     int64   `json:"tm"` //最终移动时间
+	T1     int64   `json:"t1"` //设备消息接收时间1
+	T2     int64   `json:"t2"` //设备消息转发时间1
+	T3     int64   `json:"t3"` //设备消息接收时间2
+	T4     int64   `json:"t4"` //设备消息转发时间2
+	T5     int64   `json:"t5"` //设备消息接收时间5
 }
 
 /*
@@ -28,12 +37,20 @@ type Device1 struct {
 */
 type Device struct {
 	ID     string  `json:"id"`
+	ORGX   float32 `json:"orgx"`
+	OGRY   float32 `json:"orgx"`
 	X      float32 `json:"x"`
 	Y      float32 `json:"y"`
 	R      float32 `json:"r"`
 	Status int     `json:"s"`
 	Color  int     `json:"c"`
-	T      int64   `json:"t"`
+	T      int64   `json:"t"`  //设备消息产生时间
+	TM     int64   `json:"tm"` //最终移动时间
+	T1     int64   `json:"t1"` //设备消息接收时间1
+	T2     int64   `json:"t2"` //设备消息转发时间1
+	T3     int64   `json:"t3"` //设备消息接收时间2
+	T4     int64   `json:"t4"` //设备消息转发时间2
+	T5     int64   `json:"t5"` //设备消息接收时间5
 }
 
 /**

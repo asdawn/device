@@ -1,7 +1,7 @@
 /**
 设备集，仅用于后台数据状态缓存和差分处理，不考虑消息格式问题
 
-
+ver 1.1 追加超时标记功能，标记已废弃代码（下一版本删除）
 ver 1.0
 */
 package device
@@ -10,9 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"strconv"
 	"sync"
-	"time"
 )
 
 /**
@@ -109,10 +107,11 @@ func (deviceSet *DeviceSet) List(lock bool) *DeviceList {
 /**
 设置对象取值
 device: 对象取值
+updateTM: 是否更新移动时间戳到t
 lock 是否加锁
 返回（是否是新建对象，是否发生错误）
 */
-func (deviceSet *DeviceSet) SetDevice(device *Device, lock bool) (bool, error) {
+func (deviceSet *DeviceSet) SetDevice(device *Device, updateTM bool, lock bool) (bool, error) {
 	if device == nil {
 		return false, errors.New("device should not be a null pinter")
 	}
@@ -124,6 +123,9 @@ func (deviceSet *DeviceSet) SetDevice(device *Device, lock bool) (bool, error) {
 	var id string = (*device).ID
 	_, exists := (*deviceSet).Devices[id]
 	(*deviceSet).Devices[id] = device
+	if updateTM {
+		(*device).TM = (*device).T
+	}
 	//更新集合修改时间
 	if (*device).T > (*deviceSet).LastModifyTime {
 		(*deviceSet).LastModifyTime = (*device).T
@@ -133,7 +135,30 @@ func (deviceSet *DeviceSet) SetDevice(device *Device, lock bool) (bool, error) {
 }
 
 /**
-删除超时的对象
+设置对象时间戳
+id: 对象ID
+t: 新时间戳
+lock 是否加锁
+返回（是否找到指定对象，是否发生错误）
+*/
+func (deviceSet *DeviceSet) SetTimestamp(id string, t int64, lock bool) (bool, error) {
+	if len(id) == 0 {
+		return false, errors.New("empty id")
+	}
+	if lock {
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
+	}
+	var err error = nil
+	device, exists := (*deviceSet).Devices[id]
+	if exists {
+		(*device).T = t
+	}
+	return exists, err
+}
+
+/**
+删除无消息超时的对象（根据t）
 currentTime 当前时间
 timeout 超时时间
 lock 是否加锁
@@ -160,32 +185,83 @@ func (deviceSet *DeviceSet) RemoveTimeoutDevices(currentTime int64, timeout int6
 }
 
 /**
-设置超时对象样式
+删除未移动超时的对象（根据tm）
 currentTime 当前时间
 timeout 超时时间
-status 色彩值
 lock 是否加锁
-返回：修改个数
-
+返回（删除个数，删除清单）
 */
-func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, status int, lock bool) (int, []string) {
+func (deviceSet *DeviceSet) RemoveTimeoutDevicesTM(currentTime int64, timeout int64, lock bool) (int, []string) {
 	if lock {
 		(*deviceSet).RWLock.Lock()
 		defer (*deviceSet).RWLock.Unlock()
 	}
-	var toModify = make([]string, 0, 10)
+	var toDelete = make([]string, 0, 10)
+
+	for _, device := range (*deviceSet).Devices {
+		tm := (*device).TM
+		id := (*device).ID
+		if (currentTime - tm) > timeout {
+			toDelete = append(toDelete, id)
+		}
+	}
+	for _, id := range toDelete {
+		delete((*deviceSet).Devices, id)
+	}
+	return len(toDelete), toDelete
+}
+
+/**
+标记无消息超时对象样式（根据t）
+currentTime 当前时间
+timeout 超时时间
+status 色彩值
+lock 是否加锁
+返回：(修改个数, 修改对象)
+
+*/
+func (deviceSet *DeviceSet) TagTimeoutDevices(currentTime int64, timeout int64, status int, lock bool) (int, []*Device) {
+	if lock {
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
+	}
+	var toModify = make([]*Device, 0, 10)
 	for _, device := range (*deviceSet).Devices {
 		t := (*device).T
-		id := (*device).ID
 		if (currentTime - t) > timeout {
 			(*device).Color = status
-			toModify = append(toModify, id)
+			toModify = append(toModify, device)
 		}
 	}
 	return len(toModify), toModify
 }
 
 /**
+标记未移动超时对象（根据tm）
+currentTime 当前时间
+timeout 超时时间
+status 色彩值
+lock 是否加锁
+返回：(修改个数, 修改对象)
+
+*/
+func (deviceSet *DeviceSet) TagTimeoutDevicesTM(currentTime int64, timeout int64, status int, lock bool) (int, []*Device) {
+	if lock {
+		(*deviceSet).RWLock.Lock()
+		defer (*deviceSet).RWLock.Unlock()
+	}
+	var toModify = make([]*Device, 0, 10)
+	for _, device := range (*deviceSet).Devices {
+		tm := (*device).TM
+		if (currentTime - tm) > timeout {
+			(*device).Color = status
+			toModify = append(toModify, device)
+		}
+	}
+	return len(toModify), toModify
+}
+
+/**TODO test
 设置超时对象样式 1，2，3档次
 currentTime 当前时间
 timeout 超时时间，要求降序排列
@@ -193,7 +269,6 @@ color 色彩值
 lock 是否加锁
 返回：（修改个数，修改后的对象，修改详情）
 
-*/
 func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int, lock bool) (int, []*Device, []string) {
 	if lock {
 		(*deviceSet).RWLock.Lock()
@@ -227,14 +302,15 @@ func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int6
 	}
 	return len(toModify), toSet, toModify
 }
+*/
 
-/**
-删除超时的对象
+/**deprecated
+删除消息超时的对象（根据t）
 
 timeout 超时时间
 lock 是否锁定对象
 返回 删除个数
-*/
+
 func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int {
 	if lock {
 		(*deviceList).RWLock.Lock()
@@ -252,14 +328,40 @@ func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int
 	}
 	return len(toDelete)
 }
+*/
+
+/**deprecated
+标记超时的对象（原始时间戳超时）
+
+timeout 超时时间
+lock 是否锁定对象
+返回 标记个数
+
+func (deviceList *DeviceList) TagTimeoutDevices(timeout int64, tag int, lock bool) int {
+	if lock {
+		(*deviceList).RWLock.Lock()
+		defer (*deviceList).RWLock.Unlock()
+	}
+
+	now := time.Now().Unix()
+	for id, t := range (*deviceList).Devices {
+		if now-t > timeout {
+			toDelete = append(toDelete, id)
+		}
+	}
+
+	return n
+}
+*/
 
 /**
 设置对象取值
 devices: 对象取值
+updateTM: 是否更新tm时间戳
 lock: 是否锁定对象
 返回（新建对象数，修改对象数，是否发生错误）
 */
-func (deviceSet *DeviceSet) SetDevices(devices []*Device, lock bool) (int, int, error) {
+func (deviceSet *DeviceSet) SetDevices(devices []*Device, updateTM bool, lock bool) (int, int, error) {
 	if len(devices) == 0 {
 		return 0, 0, nil
 	}
@@ -279,6 +381,9 @@ func (deviceSet *DeviceSet) SetDevices(devices []*Device, lock bool) (int, int, 
 			newCnt++
 		}
 		(*deviceSet).Devices[id] = device
+		if updateTM {
+			(*device).TM = (*device).T
+		}
 		//更新集合修改时间
 		if (*device).T > (*deviceSet).LastModifyTime {
 			(*deviceSet).LastModifyTime = (*device).T
