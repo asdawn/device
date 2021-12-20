@@ -304,13 +304,13 @@ func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int6
 }
 */
 
-/**deprecated
+/**
 删除消息超时的对象（根据t）
 
 timeout 超时时间
 lock 是否锁定对象
 返回 删除个数
-
+*/
 func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int {
 	if lock {
 		(*deviceList).RWLock.Lock()
@@ -328,15 +328,16 @@ func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int
 	}
 	return len(toDelete)
 }
-*/
 
-/**deprecated
+
+/**
 标记超时的对象（原始时间戳超时）
 
 timeout 超时时间
 lock 是否锁定对象
 返回 标记个数
-
+}
+*/
 func (deviceList *DeviceList) TagTimeoutDevices(timeout int64, tag int, lock bool) int {
 	if lock {
 		(*deviceList).RWLock.Lock()
@@ -351,8 +352,7 @@ func (deviceList *DeviceList) TagTimeoutDevices(timeout int64, tag int, lock boo
 	}
 
 	return n
-}
-*/
+
 
 /**
 设置对象取值
