@@ -11,6 +11,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"sync"
+	"time"
 )
 
 /**
@@ -328,31 +329,6 @@ func (deviceList *DeviceList) RemoveTimeoutDevices(timeout int64, lock bool) int
 	}
 	return len(toDelete)
 }
-
-
-/**
-标记超时的对象（原始时间戳超时）
-
-timeout 超时时间
-lock 是否锁定对象
-返回 标记个数
-}
-*/
-func (deviceList *DeviceList) TagTimeoutDevices(timeout int64, tag int, lock bool) int {
-	if lock {
-		(*deviceList).RWLock.Lock()
-		defer (*deviceList).RWLock.Unlock()
-	}
-
-	now := time.Now().Unix()
-	for id, t := range (*deviceList).Devices {
-		if now-t > timeout {
-			toDelete = append(toDelete, id)
-		}
-	}
-
-	return n
-
 
 /**
 设置对象取值
