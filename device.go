@@ -17,7 +17,7 @@ import (
 type Device1 struct {
 	ID     string  `json:"id"`
 	ORGX   float32 `json:"orgx"`
-	ORGY   float32 `json:"orgx"`
+	ORGY   float32 `json:"orgy"`
 	X      float32 `json:"x"`
 	Y      float32 `json:"y"`
 	R      float32 `json:"r"`
@@ -38,7 +38,7 @@ type Device1 struct {
 type Device struct {
 	ID     string  `json:"id"`
 	ORGX   float32 `json:"orgx"`
-	ORGY   float32 `json:"orgx"`
+	ORGY   float32 `json:"orgy"`
 	X      float32 `json:"x"`
 	Y      float32 `json:"y"`
 	R      float32 `json:"r"`
