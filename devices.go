@@ -69,8 +69,8 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) GetIDs(lock bool) []string {
 	if lock {
-		(*deviceSet).RWLock.Lock()
-		defer (*deviceSet).RWLock.Unlock()
+		(*deviceSet).RWLock.RLock()
+		defer (*deviceSet).RWLock.RUnlock()
 	}
 	ids := make([]string, 0)
 	if (*deviceSet).Devices != nil && len((*deviceSet).Devices) > 0 {
@@ -89,8 +89,8 @@ lock 是否加锁
 */
 func (deviceSet *DeviceSet) List(lock bool) *DeviceList {
 	if lock {
-		(*deviceSet).RWLock.Lock()
-		defer (*deviceSet).RWLock.Unlock()
+		(*deviceSet).RWLock.RLock()
+		defer (*deviceSet).RWLock.RUnlock()
 	}
 	list := &DeviceList{
 		DeviceClass: deviceSet.DeviceClass,
@@ -147,8 +147,8 @@ func (deviceSet *DeviceSet) SetTimestamp(id string, t int64, lock bool) (bool, e
 		return false, errors.New("empty id")
 	}
 	if lock {
-		(*deviceSet).RWLock.Lock()
-		defer (*deviceSet).RWLock.Unlock()
+		(*deviceSet).RWLock.RLock()
+		defer (*deviceSet).RWLock.RUnlock()
 	}
 	var err error = nil
 	device, exists := (*deviceSet).Devices[id]
@@ -261,49 +261,6 @@ func (deviceSet *DeviceSet) TagTimeoutDevicesTM(currentTime int64, timeout int64
 	}
 	return len(toModify), toModify
 }
-
-/**TODO test
-设置超时对象样式 1，2，3档次
-currentTime 当前时间
-timeout 超时时间，要求降序排列
-color 色彩值
-lock 是否加锁
-返回：（修改个数，修改后的对象，修改详情）
-
-func (deviceSet *DeviceSet) TagTimeoutDevices2(currentTime int64, timeout []int64, color []int, lock bool) (int, []*Device, []string) {
-	if lock {
-		(*deviceSet).RWLock.Lock()
-		defer (*deviceSet).RWLock.Unlock()
-	}
-	toSet := make([]*Device, 0)
-	if len(timeout) != len(color) {
-		return 0, nil, nil
-	}
-	var n = len(timeout)
-	var toModify = make([]string, 0, 10)
-
-	for _, device := range (*deviceSet).Devices {
-		t := (*device).T
-		id := (*device).ID
-		var i = 0
-		for i = 0; i < n; i++ {
-			//超时降序排列，超时多先判断，只记录真正修改的
-			if (currentTime - t) >= timeout[i] {
-				if (*device).Color != color[i] {
-					(*device).Color = color[i]
-					toSet = append(toSet, device)
-					toModify = append(toModify, id+"-->"+strconv.Itoa(color[i]))
-				}
-				break
-			}
-		}
-	}
-	if len(toSet) == 0 {
-		toSet = nil
-	}
-	return len(toModify), toSet, toModify
-}
-*/
 
 /**
 删除消息超时的对象（根据t）
@@ -420,8 +377,8 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) GetDevice(id string, lock bool) *Device {
 	if lock {
-		(*deviceSet).RWLock.Lock()
-		defer (*deviceSet).RWLock.Unlock()
+		(*deviceSet).RWLock.RLock()
+		defer (*deviceSet).RWLock.RUnlock()
 	}
 	var device, ok = (*deviceSet).Devices[id]
 	if !ok {
@@ -437,8 +394,8 @@ lock: 是否锁定对象
 */
 func (deviceSet *DeviceSet) GetDevices(lock bool) []*Device {
 	if lock {
-		(*deviceSet).RWLock.Lock()
-		defer (*deviceSet).RWLock.Unlock()
+		(*deviceSet).RWLock.RLock()
+		defer (*deviceSet).RWLock.RUnlock()
 	}
 	var devices []*Device
 	devices = make([]*Device, 0)
