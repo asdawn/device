@@ -1,6 +1,7 @@
 /*
 设备信息
-ver 1.2 拆分Color为高亮+颜色代码
+ver 1.3 增加子类型p字段
+ver 1.2 拆分颜色为高亮hlt+颜色代码c
 ver 1.1 增加额外时间戳、原始坐标
 ver 1.0
 */
@@ -22,16 +23,17 @@ type Device1 struct {
 	X         float32 `json:"x"`
 	Y         float32 `json:"y"`
 	R         float32 `json:"r"`
-	Status    int     `json:"s"`
-	Highlight int     `json:"hlt"`
-	Color     int     `json:"c"`
-	T         string  `json:"t"`  //设备消息产生时间
-	TM        int64   `json:"tm"` //最终移动时间
-	T1        int64   `json:"t1"` //设备消息接收时间1
-	T2        int64   `json:"t2"` //设备消息转发时间1
-	T3        int64   `json:"t3"` //设备消息接收时间2
-	T4        int64   `json:"t4"` //设备消息转发时间2
-	T5        int64   `json:"t5"` //设备消息接收时间5
+	Status    int     `json:"s"`   //状态代码，见文档
+	Highlight int     `json:"hlt"` //高亮代码，定义见文档
+	Color     int     `json:"c"`   //颜色代码，定义见文档
+	Type      int     `json:"p"`   //设备子类型，定义见文档
+	T         string  `json:"t"`   //设备消息产生时间
+	TM        int64   `json:"tm"`  //最终移动时间
+	T1        int64   `json:"t1"`  //设备消息接收时间1
+	T2        int64   `json:"t2"`  //设备消息转发时间1
+	T3        int64   `json:"t3"`  //设备消息接收时间2
+	T4        int64   `json:"t4"`  //设备消息转发时间2
+	T5        int64   `json:"t5"`  //设备消息接收时间5
 }
 
 /*
@@ -44,16 +46,17 @@ type Device struct {
 	X         float32 `json:"x"`
 	Y         float32 `json:"y"`
 	R         float32 `json:"r"`
-	Status    int     `json:"s"`
-	Highlight int     `json:"hlt"`
-	Color     int     `json:"c"`
-	T         int64   `json:"t"`  //设备消息产生时间
-	TM        int64   `json:"tm"` //最终移动时间
-	T1        int64   `json:"t1"` //设备消息接收时间1
-	T2        int64   `json:"t2"` //设备消息转发时间1
-	T3        int64   `json:"t3"` //设备消息接收时间2
-	T4        int64   `json:"t4"` //设备消息转发时间2
-	T5        int64   `json:"t5"` //设备消息接收时间5
+	Status    int     `json:"s"`   //状态代码，见文档
+	Highlight int     `json:"hlt"` //高亮代码，定义见文档
+	Color     int     `json:"c"`   //颜色代码，定义见文档
+	Type      int     `json:"p"`   //设备子类型，定义见文档
+	T         int64   `json:"t"`   //设备消息产生时间
+	TM        int64   `json:"tm"`  //最终移动时间
+	T1        int64   `json:"t1"`  //设备消息接收时间1
+	T2        int64   `json:"t2"`  //设备消息转发时间1
+	T3        int64   `json:"t3"`  //设备消息接收时间2
+	T4        int64   `json:"t4"`  //设备消息转发时间2
+	T5        int64   `json:"t5"`  //设备消息接收时间5
 }
 
 /**
